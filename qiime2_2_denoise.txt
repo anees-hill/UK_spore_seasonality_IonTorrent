@@ -1,0 +1,66 @@
+#!/bin/bash
+
+#PBS -N qiime2_2_denoise
+#PBS -o $HOME/bashScriptMsgs/qiime2_2_denoise.output
+#PBS -e $HOME/bashScriptMsgs/qiime2_2_denoise.error
+#PBS -l walltime=03:00:00
+#PBS -l vmem=16g
+#PBS -m bae
+#PBS -M sph22@leicester.ac.uk
+#PBS -l nodes=4:ppn=1
+
+cd $PBS_O_WORKDIR/HTS_RUN1/
+
+# load qiime2
+module load qiime2/2019.4
+export LANG=en_GB.UTF-8
+shopt -s expand_aliases
+qiime2
+
+# QIIME commands
+# DADA denoise ===================================================
+# ITS2 ----------------------------------------------
+qiime dada2 denoise-pyro \
+  --i-demultiplexed-seqs ./demux_ITS2_noFRPrimer.qza \
+  --p-n-threads 4 \
+  --p-trunc-len 212 \
+  --p-pooling-method 'pseudo' \
+  --o-table ./dada2_ITS2_table.qza \
+  --o-representative-sequences ./dada2_ITS2_repseq.qza \
+  --o-denoising-stats ./dada2_ITS2_stats.qza
+
+qiime metadata tabulate \
+  --m-input-file ./dada2_ITS2_stats.qza  \
+  --o-visualization ./dada2_ITS2_stats.qzv
+
+qiime feature-table summarize \
+  --i-table ./dada2_ITS2_table.qza \
+  --m-sample-metadata-file ./HTS_RUN1_ITS2_meta.txt \
+  --o-visualization ./dada2_ITS2_table.qzv
+
+qiime feature-table tabulate-seqs \
+  --i-data ./dada2_ITS2_repseq.qza \
+  --o-visualization ./dada2_ITS2_repseq.qzv 
+
+# LSU ----------------------------------------------
+qiime dada2 denoise-pyro \
+  --i-demultiplexed-seqs ./demux_LSU_noFRPrimer.qza \
+  --p-n-threads 4 \
+  --p-trunc-len 250 \
+  --p-pooling-method 'pseudo' \
+  --o-table ./dada2_LSU_table.qza \
+  --o-representative-sequences ./dada2_LSU_repseq.qza \
+  --o-denoising-stats ./dada2_LSU_stats.qza
+
+qiime metadata tabulate \
+  --m-input-file ./dada2_LSU_stats.qza  \
+  --o-visualization ./dada2_LSU_stats.qzv
+
+qiime feature-table summarize \
+  --i-table ./dada2_LSU_table.qza \
+  --m-sample-metadata-file ./HTS_RUN1_LSU_meta.txt \
+  --o-visualization ./dada2_LSU_table.qzv
+
+qiime feature-table tabulate-seqs \
+  --i-data ./dada2_ITS2_repseq.qza \
+  --o-visualization ./dada2_LSU_repseq.qzv 

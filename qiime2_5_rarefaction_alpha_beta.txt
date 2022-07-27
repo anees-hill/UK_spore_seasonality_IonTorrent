@@ -1,0 +1,34 @@
+# This script is for interactive use
+
+
+# Alpha rarefaction ==========================================
+
+qiime diversity alpha-rarefaction \
+  --i-table ./dada2_ITS2_table.qza \
+  --m-metadata-file ./HTS_RUN1_ITS2_meta.txt \
+  --o-visualization ./alpha_rarefaction_curvesITS2.qzv \
+  --p-min-depth 10 \
+  --p-max-depth 16462
+
+qiime feature-table filter-samples \
+  --i-table ./dada2_ITS2_table.qza \
+  --p-min-frequency 3000 \
+  --o-filtered-table ./dada2_ITS2_table_filtered.qza
+
+
+# Generate taxanomic barcharts
+# ITS2 -----------------
+qiime taxa barplot \
+  --i-table dada2_ITS2_table_filtered.qza \
+  --i-taxonomy taxonomy-ITS2.qza \
+  --m-metadata-file HTS_RUN1_ITS2_meta.txt \
+  --o-visualization taxa-bar-plotsITS2.qzv
+
+# LSU -----------------
+qiime taxa barplot \
+  --i-table dada2_LSU_table_filtered.qza \
+  --i-taxonomy taxonomy-LSU.qza \
+  --m-metadata-file HTS_RUN1_LSU_meta.txt \
+  --o-visualization taxa-bar-plotsLSU.qzv
+
+

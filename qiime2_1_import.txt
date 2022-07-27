@@ -1,0 +1,107 @@
+#!/bin/bash
+
+#PBS -N qiime2_1_import
+#PBS -o $HOME/bashScriptMsgs/qiime2_1_import.output
+#PBS -e $HOME/bashScriptMsgs/qiime2_1_import.error
+#PBS -l walltime=03:00:00
+#PBS -l vmem=16g
+#PBS -m bae
+#PBS -M sph22@leicester.ac.uk
+#PBS -l nodes=4:ppn=1
+
+cd $PBS_O_WORKDIR/HTS_RUN1/
+
+# load qiime2
+module load qiime2/2019.4
+export LANG=en_GB.UTF-8
+shopt -s expand_aliases
+qiime2
+
+# QIIME commands
+# IMPORT FASTAQ ===================================================
+
+# ITS2
+qiime tools import \
+  --type "SampleData[SequencesWithQuality]" \
+  --input-format SingleEndFastqManifestPhred33V2 \
+  --input-path ./HTS_RUN1_ITS2_manifest.txt \
+  --output-path ./demux_ITS2.qza
+
+# LSU
+qiime tools import \
+  --type "SampleData[SequencesWithQuality]" \
+  --input-format SingleEndFastqManifestPhred33V2 \
+  --input-path ./HTS_RUN1_LSU_manifest.txt \
+  --output-path ./demux_LSU.qza
+
+# Pre_trim summary ===================================================
+
+# ITS2
+qiime demux summarize \
+  --i-data ./demux_ITS2.qza \
+  --o-visualization ./demux_ITS2.qzv
+
+# LSU
+qiime demux summarize \
+  --i-data ./demux_LSU.qza \
+  --o-visualization ./demux_LSU.qzv
+
+# Trim F primers ===================================================
+
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ./demux_ITS2.qza \
+  --p-cores 1 \
+  --p-front "GTGAATCATCGAATCTTTGAA" \
+  --p-discard-untrimmed True \
+  --o-trimmed-sequences ./demux_ITS2_noFPrimer.qza
+
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ./demux_LSU.qza \
+  --p-cores 1 \
+  --p-front "GAGTCGAGTTGTTTGGGAATGC" \
+  --p-discard-untrimmed True \
+  --o-trimmed-sequences ./demux_LSU_noFPrimer.qza
+
+# Post_F_trim summary ===================================================
+
+qiime demux summarize \
+  --i-data ./demux_ITS2_noFPrimer.qza \
+  --o-visualization ./demux_ITS2_noFPrimer.qzv
+
+qiime demux summarize \
+  --i-data ./demux_LSU_noFPrimer.qza \
+  --o-visualization ./demux_LSU_noFPrimer.qzv
+
+# Trim R primers ===================================================
+
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ./demux_ITS2_noFPrimer.qza \
+  --p-cores 1 \
+  --p-adapter "GCATATCAATAAGCGGAGGA" \
+  --p-discard-untrimmed True \
+  --o-trimmed-sequences ./demux_ITS2_noFRPrimer.qza
+
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ./demux_LSU_noFPrimer.qza \
+  --p-cores 1 \
+  --p-adapter "CCGTCTTGAAACACGGACC" \
+  --p-discard-untrimmed True \
+  --o-trimmed-sequences ./demux_LSU_noFRPrimer.qza
+
+# Post_FR_trim summary ===================================================
+
+qiime demux summarize \
+  --i-data ./demux_ITS2_noFRPrimer.qza \
+  --o-visualization ./demux_ITS2_noFRPrimer.qzv
+
+qiime demux summarize \
+  --i-data ./demux_LSU_noFRPrimer.qza \
+  --o-visualization ./demux_LSU_noFRPrimer.qzv
+
+# Visualisations so far ===================================================
+# demux_ITS2.qzv
+# demux_LSU.qzv
+# demux_ITS2_noFPrimer.qzv
+# demux_LSU_noFPrimer.qzv
+# demux_ITS2_noFRPrimer.qzv
+# demux_LSU_noFRPrimer.qzv

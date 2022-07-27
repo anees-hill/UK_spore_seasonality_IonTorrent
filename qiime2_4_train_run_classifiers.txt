@@ -1,0 +1,55 @@
+#!/bin/bash
+
+#PBS -N qiime2_4_train_run_classifiers
+#PBS -o $HOME/bashScriptMsgs/qiime2_4_train_run_classifiers.output
+#PBS -e $HOME/bashScriptMsgs/qiime2_4_train_run_classifiers.error
+#PBS -l walltime=05:00:00
+#PBS -l vmem=16g
+#PBS -m bae
+#PBS -M sph22@leicester.ac.uk
+#PBS -l nodes=4:ppn=1
+
+cd $PBS_O_WORKDIR/HTS_RUN1/
+
+# load qiime2
+module load qiime2/2019.4
+export LANG=en_GB.UTF-8
+shopt -s expand_aliases
+qiime2
+
+# QIIME commands
+# TRAIN/RUN ITS2 CLASSIFIERS ===========================================
+
+# UNITE ----------------------------------
+qiime feature-classifier fit-classifier-naive-bayes \
+ --i-reference-reads unite-ver7-99-seqs-01.12.2017.qza \
+ --i-reference-taxonomy unite-ver7-99-tax-01.12.2017.qza \
+ --o-classifier unite-ver7-99-classifier-01.12.2017.qza
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier unite-ver7-99-classifier-01.12.2017.qza \
+  --i-reads ./dada2_ITS2_repseq.qza \
+  --o-classification ./taxonomy-ITS2.qza
+
+qiime metadata tabulate \
+  --m-input-file ./classification taxonomy-ITS2.qza \
+  --o-visualization ./classification taxonomy-ITS2.qzv
+
+# NCBI ----------------------------------
+
+
+
+# TRAIN/RUN LSU CLASSIFIERS ===========================================
+
+# NCBI ----------------------------------
+
+
+
+
+
+
+
+
+
+
+
